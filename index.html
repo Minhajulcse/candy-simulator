@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Mofiz Candy Simulator</title>
+<style>
+  body {
+    background: #0f172a;
+    color: white;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  .card {
+    max-width: 600px;
+    margin: auto;
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px #00000055;
+  }
+  input {
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    width: 120px;
+    margin-top: 10px;
+  }
+  table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+  }
+  th, td {
+    padding: 8px;
+    border-bottom: 1px solid #334155;
+    text-align: center;
+  }
+  button {
+    margin-left: 10px;
+    padding: 10px 15px;
+    background: #38bdf8;
+    color: black;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>🍬 Mofiz Candy Simulator</h2>
+  <p>Enter number of friends:</p>
+
+  <input type="number" id="friends" value="3" min="1" />
+  <button onclick="simulate()">Run Simulation</button>
+
+  <div id="result"></div>
+</div>
+
+<script>
+function simulate() {
+  const n = parseInt(document.getElementById("friends").value);
+  if (isNaN(n) || n <= 0) return;
+
+  const give = 2 ** n;
+  const start = give - 1;
+
+  let html = `
+    <p><strong>N = ${n}</strong></p>
+    <p>Minimum starting candies = <strong>${start}</strong></p>
+    <p>Candies given to each friend = <strong>${give}</strong></p>
+    
+    <h3>Step-by-Step Simulation</h3>
+    <table>
+      <tr>
+        <th>Friend #</th>
+        <th>Before Double</th>
+        <th>After Double</th>
+        <th>Given</th>
+        <th>Remaining</th>
+      </tr>
+  `;
+
+  let current = start;
+
+  for (let i = 1; i <= n; i++) {
+    let before = current;
+    let after = before * 2;
+    let remaining = after - give;
+
+    html += `
+      <tr>
+        <td>${i}</td>
+        <td>${before}</td>
+        <td>${after}</td>
+        <td>${give}</td>
+        <td>${remaining}</td>
+      </tr>
+    `;
+
+    current = remaining;
+  }
+
+  html += "</table>";
+  document.getElementById("result").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
