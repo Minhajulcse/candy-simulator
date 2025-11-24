@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Mofiz Candy Visualizer – Next Only</title>
+  <title>Mofiz Candy Visualizer – Next & Previous</title>
   <style>
     body {
       background: #0f172a;
@@ -167,12 +167,20 @@
       color: #9ca3af;
       margin-top: 6px;
     }
+
+    .controls-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 4px;
+    }
   </style>
 </head>
 <body>
 
   <h1>🍬 Mofiz Candy Visualizer</h1>
-  <p>Enter number of teammates (N), and go step by step with the Next button.</p>
+  <p>Enter number of teammates (N), then move step by step with Previous / Next.</p>
 
   <div class="box">
     <div>
@@ -180,7 +188,8 @@
       <button onclick="calculate()">Show Visualization</button>
     </div>
     <p class="info-text">
-      Formula used: start candies = 2ⁿ − 1, candies given to each teammate = 2ⁿ.
+      Formula: start candies = 2ⁿ − 1, candies given to each teammate = 2ⁿ.<br>
+      Calculated using big integers (similar to <code>long long</code>).
     </p>
   </div>
 
@@ -201,14 +210,17 @@
   </div>
 
   <div class="box" id="animationControls" style="display:none; margin-top:10px;">
-    <button id="nextButton" onclick="nextStep()">Next step ➡</button>
+    <div class="controls-buttons">
+      <button id="prevButton" onclick="prevStep()">⬅ Previous</button>
+      <button id="nextButton" onclick="nextStep()">Next ➡</button>
+    </div>
     <span id="statusText" class="info-text"></span>
   </div>
 
   <div id="result"></div>
 
   <script>
-    let stepsData = [];
+    let stepsData = [];      // holds all steps (BigInt values)
     let currentStepIndex = 0; // 0 = before any teammate
 
     function calculate() {
@@ -218,8 +230,9 @@
         return;
       }
 
-      const startCandies = Math.pow(2, N) - 1;
-      const giveAmount = Math.pow(2, N);
+      const two = 2n;
+      const startCandies = (two ** BigInt(N)) - 1n;  // 2^N - 1
+      const giveAmount   = (two ** BigInt(N));       // 2^N
       let candies = startCandies;
 
       stepsData = [];
@@ -239,8 +252,8 @@
 
       for (let i = 1; i <= N; i++) {
         const beforeDouble = candies;
-        const afterDouble = candies * 2;
-        const left = afterDouble - giveAmount;
+        const afterDouble  = candies * 2n;
+        const left         = afterDouble - giveAmount;
 
         stepsData.push({
           teammate: i,
@@ -250,13 +263,18 @@
           left
         });
 
+        // First row: add "(starting candies)" in brackets
+        const beforeDisplay = (i === 1)
+          ? `${beforeDouble.toString()} (starting candies)`
+          : beforeDouble.toString();
+
         tableHTML += `
           <tr id="row-${i}">
             <td>${i}</td>
-            <td>${beforeDouble}</td>
-            <td>${afterDouble}</td>
-            <td>${giveAmount}</td>
-            <td>${left}</td>
+            <td>${beforeDisplay}</td>
+            <td>${afterDouble.toString()}</td>
+            <td>${giveAmount.toString()}</td>
+            <td>${left.toString()}</td>
           </tr>
         `;
 
@@ -268,9 +286,9 @@
       const summaryHTML = `
         <div class="visual-card" id="visualCard">
           <div class="big-emoji">🧍‍♂️🍬</div>
-          <strong>Mofiz starts with ${startCandies} candies.</strong><br>
-          He will give <strong>${giveAmount} candies</strong> to each of his ${N} teammates.<br><br>
-          Click <strong>"Next step"</strong> to move to the next teammate.
+          <strong>Mofiz starts with ${startCandies.toString()} candies.</strong><br>
+          He will give <strong>${giveAmount.toString()} candies</strong> to each of his ${N} teammates.<br><br>
+          Use <strong>"Previous"</strong> and <strong>"Next"</strong> to move through the steps.
         </div>
       `;
 
@@ -287,7 +305,9 @@
       moveMofizToStep(0, N);
       highlightRow(0);
       document.getElementById("statusText").innerText =
-        `Ready. Mofiz has ${startCandies} candies before starting.`;
+        `Ready. Mofiz has ${startCandies.toString()} candies before starting.`;
+
+      document.getElementById("prevButton").disabled = true;
       document.getElementById("nextButton").disabled = false;
     }
 
@@ -385,9 +405,9 @@
       let text = `
         <div class="big-emoji">🧍‍♂️➡🧑‍🤝‍🧑</div>
         <strong>Meeting teammate ${step.teammate} of ${N}</strong><br><br>
-        Candies double: <strong>${step.beforeDouble} → ${step.afterDouble}</strong> ✨<br>
-        He gives <strong>${step.given}</strong> candies 🍬<br>
-        He walks away with <strong>${step.left}</strong> candies.
+        Candies double: <strong>${step.beforeDouble.toString()} → ${step.afterDouble.toString()}</strong> ✨<br>
+        He gives <strong>${step.given.toString()}</strong> candies 🍬<br>
+        He walks away with <strong>${step.left.toString()}</strong> candies.
       `;
 
       if (stepIndex === N) {
@@ -417,11 +437,43 @@
       const step = stepsData[currentStepIndex - 1];
       document.getElementById("statusText").innerText =
         `Now visiting teammate ${step.teammate}/${N}. ` +
-        `Candies: ${step.beforeDouble} → ${step.afterDouble}, gives ${step.given}, left ${step.left}.`;
+        `Candies: ${step.beforeDouble.toString()} → ${step.afterDouble.toString()}, ` +
+        `gives ${step.given.toString()}, left ${step.left.toString()}.`;
 
+      document.getElementById("prevButton").disabled = currentStepIndex === 0;
       if (currentStepIndex === N) {
-        // last step reached; next click will show finished message & disable button
+        // On last step, keep Next enabled for one more click to show "Finished!" message
       }
+    }
+
+    function prevStep() {
+      if (!stepsData.length) return;
+
+      if (currentStepIndex === 0) {
+        return;
+      }
+
+      currentStepIndex--;
+
+      const N = stepsData.length;
+      moveMofizToStep(currentStepIndex, N);
+      highlightRow(currentStepIndex);
+      updateVisualCard(currentStepIndex);
+
+      if (currentStepIndex === 0) {
+        const startCandies = stepsData[0].beforeDouble;
+        document.getElementById("statusText").innerText =
+          `Back to start. Mofiz has ${startCandies.toString()} candies before meeting anyone.`;
+      } else {
+        const step = stepsData[currentStepIndex - 1];
+        document.getElementById("statusText").innerText =
+          `Back to teammate ${step.teammate}/${N}. ` +
+          `Candies: ${step.beforeDouble.toString()} → ${step.afterDouble.toString()}, ` +
+          `gives ${step.given.toString()}, left ${step.left.toString()}.`;
+      }
+
+      document.getElementById("prevButton").disabled = currentStepIndex === 0;
+      document.getElementById("nextButton").disabled = false;
     }
   </script>
 
