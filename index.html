@@ -1,330 +1,500 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Mofiz Candy Simulator & Animation</title>
-<style>
-  body {
-    background: #0f172a;
-    color: white;
-    font-family: Arial, sans-serif;
-    padding: 20px;
-  }
-  .card {
-    max-width: 900px;
-    margin: auto;
-    background: #1e293b;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 0 20px #00000055;
-  }
-  h2, h3 {
-    margin-top: 0;
-  }
-  input {
-    padding: 8px;
-    border-radius: 8px;
-    border: none;
-    width: 120px;
-    margin-top: 10px;
-  }
-  button {
-    margin-left: 10px;
-    padding: 8px 14px;
-    background: #38bdf8;
-    color: #020617;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 10px;
-    font-weight: 600;
-  }
-  button:disabled {
-    opacity: 0.6;
-    cursor: default;
-  }
-  table {
-    width: 100%;
-    margin-top: 20px;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  th, td {
-    padding: 8px;
-    border-bottom: 1px solid #334155;
-    text-align: center;
-  }
+  <meta charset="UTF-8" />
+  <title>Mofiz Candy Story – Visualization</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
 
-  /* Animation area */
-  .animation-wrapper {
-    margin-top: 30px;
-    border-top: 1px solid #334155;
-    padding-top: 20px;
-  }
-  #animationTrack {
-    position: relative;
-    height: 180px;
-    margin-top: 15px;
-    margin-bottom: 15px;
-    background: #020617;
-    border-radius: 12px;
-    border: 1px solid #334155;
-    overflow: hidden;
-  }
-  #groundLine {
-    position: absolute;
-    left: 5%;
-    right: 5%;
-    bottom: 30px;
-    height: 4px;
-    background: #38bdf8;
-  }
-  .friend-marker {
-    position: absolute;
-    bottom: 40px;
-    width: 60px;
-    text-align: center;
-    transform: translateX(-50%);
-  }
-  .friend-dot {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: #fbbf24;
-    margin: 0 auto 4px;
-  }
-  .friend-label {
-    font-size: 12px;
-    color: #e5e7eb;
-  }
+    body {
+      background: #0f172a;
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
 
-  #mofiz {
-    position: absolute;
-    bottom: 45px;
-    left: 5%;
-    width: 90px; /* adjust for your image */
-    transition: left 1s linear;
-  }
+    .app {
+      max-width: 900px;
+      width: 100%;
+      background: #020617;
+      border-radius: 18px;
+      padding: 24px 20px 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      border: 1px solid #1f2937;
+    }
 
-  .anim-info {
-    font-size: 14px;
-    background: #020617;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #334155;
-  }
-  .anim-numbers {
-    font-size: 16px;
-    margin-bottom: 4px;
-  }
-  .highlight {
-    color: #38bdf8;
-    font-weight: bold;
-  }
-</style>
+    h1 {
+      font-size: 1.7rem;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #9ca3af;
+      margin-bottom: 18px;
+    }
+
+    .story {
+      font-size: 0.9rem;
+      line-height: 1.4;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      border: 1px dashed #1e293b;
+    }
+
+    .highlight {
+      color: #facc15;
+      font-weight: 600;
+    }
+
+    .scene-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .step-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #a5b4fc;
+    }
+
+    .scene {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .card {
+      flex: 1 1 220px;
+      max-width: 260px;
+      background: #020617;
+      border-radius: 16px;
+      padding: 14px 14px 16px;
+      border: 1px solid #1f2937;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 55%);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .avatar {
+      font-size: 1.6rem;
+      margin-right: 8px;
+    }
+
+    .card-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+    }
+
+    .card-sub {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .candies {
+      margin-top: 6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .candies-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    .candies-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .candies-value span {
+      vertical-align: middle;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid #1f2937;
+      background: rgba(15, 23, 42, 0.9);
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    .arrow {
+      font-size: 1.6rem;
+      margin: 0 4px;
+    }
+
+    .panel {
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1px solid #1f2937;
+      font-size: 0.85rem;
+      line-height: 1.3;
+    }
+
+    .panel strong {
+      color: #bbf7d0;
+    }
+
+    .panel-line {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 4px;
+    }
+
+    .panel-label {
+      color: #9ca3af;
+    }
+
+    .panel-value {
+      font-weight: 600;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: #1d4ed8;
+      color: #e5e7eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.08s ease;
+    }
+
+    button:disabled {
+      background: #111827;
+      color: #4b5563;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    button:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(31, 41, 55, 0.6);
+      background: #2563eb;
+    }
+
+    .step-info {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .log {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      max-height: 120px;
+      overflow-y: auto;
+      padding-right: 3px;
+    }
+
+    .log-entry {
+      margin-bottom: 4px;
+      color: #9ca3af;
+    }
+
+    .log-entry span {
+      color: #e5e7eb;
+      font-weight: 500;
+    }
+
+    @media (max-width: 640px) {
+      .app {
+        padding: 18px 14px 22px;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+      .card {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="app">
+    <h1>🍬 Mofiz & His Teammates – Candy Story</h1>
+    <p class="subtitle">Example: 3 teammates, starting with <span class="highlight">7 candies</span>, giving <span class="highlight">8 candies</span> to each.</p>
 
-<div class="card">
-  <h2>🍬 Mofiz Candy Simulator</h2>
-  <p>Enter number of friends (for the math). For the animation we’ll use the same N (try N = 3 to match the story).</p>
-
-  <input type="number" id="friends" value="3" min="1" />
-  <button onclick="simulate()">Show Table</button>
-  <button id="playBtn" onclick="playAnimation()">▶ Play Animation</button>
-
-  <div id="result"></div>
-
-  <!-- ANIMATION SECTION -->
-  <div class="animation-wrapper">
-    <h3>Animated story of Mofiz visiting his friends</h3>
-    <p style="font-size:14px;color:#cbd5f5;">
-      Watch: candies double before each friend, he gives the same amount to each friend, and finally ends with <b>0 candies</b>.
-    </p>
-
-    <div id="animationTrack">
-      <div id="groundLine"></div>
-
-      <!-- Friend positions (we’ll set labels from JS) -->
-      <div class="friend-marker" id="friend1" style="left: 30%;">
-        <div class="friend-dot"></div>
-        <div class="friend-label">Friend 1</div>
-      </div>
-      <div class="friend-marker" id="friend2" style="left: 55%;">
-        <div class="friend-dot"></div>
-        <div class="friend-label">Friend 2</div>
-      </div>
-      <div class="friend-marker" id="friend3" style="left: 80%;">
-        <div class="friend-dot"></div>
-        <div class="friend-label">Friend 3</div>
-      </div>
-
-      <!-- Mofiz image -->
-      <!-- Save your picture as 'mofiz.png' in the same folder as this HTML -->
-      <img id="mofiz" src="mofiz.png" alt="Mofiz walking with candies" />
+    <div class="story">
+      Mofiz is visiting his <span class="highlight">3 football teammates</span> one by one.
+      Before each visit, his candies <span class="highlight">double magically ✨</span>.
+      He gives the <span class="highlight">same number of candies</span> to every teammate and wants to finish with
+      <span class="highlight">0 candies left</span>.
     </div>
 
-    <div class="anim-info">
-      <div class="anim-numbers">
-        Candies in bag: <span id="candiesText" class="highlight">–</span>
+    <div class="scene-wrapper">
+      <div class="step-label" id="stepLabel">Step 0 of 3 · Before meeting anyone</div>
+
+      <div class="scene">
+        <!-- Mofiz card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="avatar">🧍‍♂️</div>
+            <div>
+              <div class="card-title">Mofiz</div>
+              <div class="card-sub">Carries candies between teammates</div>
+            </div>
+          </div>
+          <div class="candies">
+            <div class="candies-label">Candies with Mofiz now</div>
+            <div class="candies-value">
+              <span id="mofizCandies">7</span> 🍬
+            </div>
+            <div class="pill">
+              <span>🎯 Start with 7 candies</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="arrow">➡️</div>
+
+        <!-- Friend card -->
+        <div class="card">
+          <div class="card-header">
+            <div class="avatar">🧑‍🤝‍🧑</div>
+            <div>
+              <div class="card-title">Teammate <span id="friendNumber">–</span></div>
+              <div class="card-sub">Waiting for candies</div>
+            </div>
+          </div>
+          <div class="candies">
+            <div class="candies-label">Candies given to this teammate</div>
+            <div class="candies-value">
+              <span id="givenCandies">0</span> 🍬
+            </div>
+            <div class="pill">
+              <span>Everyone gets the same amount</span>
+            </div>
+          </div>
+        </div>
       </div>
-      <div id="detailText">
-        Click <b>Play Animation</b> to see the journey.
+
+      <!-- Details panel -->
+      <div class="panel" id="panelText">
+        💡 Press "<strong>Next step</strong>" to see how candies double and how many Mofiz gives.
       </div>
     </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="buttons">
+        <button id="prevBtn" disabled>
+          ⬅️ Back
+        </button>
+        <button id="nextBtn">
+          Next step ➡️
+        </button>
+      </div>
+      <div class="step-info" id="stepInfo">
+        Step 0 · Candies with Mofiz: 7 · Given to this teammate: 0
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div class="log" id="log"></div>
   </div>
-</div>
 
-<script>
-function computeSteps(n) {
-  const give = Math.pow(2, n);   // candies given to each friend
-  const start = give - 1;        // starting candies
-  const steps = [];
-  let current = start;
+  <script>
+    // Steps for the example with 3 teammates
+    // Each step happens just before/when he meets that teammate.
+    const steps = [
+      {
+        label: "Step 0 of 3 · Before meeting anyone",
+        friend: "-",
+        beforeDouble: 7,
+        afterDouble: 7,
+        given: 0,
+        left: 7,
+        text: "Mofiz is ready to go. He starts with 7 candies in his hand."
+      },
+      {
+        label: "Step 1 of 3 · Meeting teammate 1",
+        friend: 1,
+        beforeDouble: 7,
+        afterDouble: 14,
+        given: 8,
+        left: 6,
+        text:
+          "Before meeting teammate 1, 7 candies double to 14 ✨. " +
+          "He gives 8 candies to teammate 1 and walks away with 6."
+      },
+      {
+        label: "Step 2 of 3 · Meeting teammate 2",
+        friend: 2,
+        beforeDouble: 6,
+        afterDouble: 12,
+        given: 8,
+        left: 4,
+        text:
+          "Now he has 6 candies. They double to 12 ✨. " +
+          "He gives 8 candies to teammate 2 and walks away with 4."
+      },
+      {
+        label: "Step 3 of 3 · Meeting teammate 3",
+        friend: 3,
+        beforeDouble: 4,
+        afterDouble: 8,
+        given: 8,
+        left: 0,
+        text:
+          "He reaches teammate 3 with 4 candies. They double to 8 ✨. " +
+          "He gives 8 candies to teammate 3 and now has 0 candies left. Perfect!"
+      }
+    ];
 
-  for (let i = 1; i <= n; i++) {
-    const beforeDouble = current;
-    const afterDouble = current * 2;
-    const remaining = afterDouble - give;
+    const stepLabel = document.getElementById("stepLabel");
+    const mofizCandies = document.getElementById("mofizCandies");
+    const givenCandies = document.getElementById("givenCandies");
+    const friendNumber = document.getElementById("friendNumber");
+    const panelText = document.getElementById("panelText");
+    const stepInfo = document.getElementById("stepInfo");
+    const logBox = document.getElementById("log");
 
-    steps.push({
-      friend: i,
-      beforeDouble,
-      afterDouble,
-      given: give,
-      remaining
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    let currentStep = 0;
+
+    function addLog(message) {
+      const div = document.createElement("div");
+      div.className = "log-entry";
+      div.innerHTML = message;
+      logBox.appendChild(div);
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    function renderStep() {
+      const s = steps[currentStep];
+
+      stepLabel.textContent = s.label;
+      friendNumber.textContent = s.friend === "-" ? "–" : s.friend;
+      mofizCandies.textContent = s.left; // candies carried after this step
+      givenCandies.textContent = s.given;
+
+      if (currentStep === 0) {
+        panelText.innerHTML =
+          "💡 Mofiz is about to start his journey. He has <strong>7 candies</strong>. " +
+          "Press <strong>Next step</strong> to see what happens with teammate 1.";
+      } else {
+        panelText.innerHTML =
+          "🧍‍♂️ Before teammate " +
+          s.friend +
+          ": candies double from <strong>" +
+          s.beforeDouble +
+          "</strong> to <strong>" +
+          s.afterDouble +
+          "</strong>.<br>" +
+          "🍬 He gives <strong>" +
+          s.given +
+          " candies</strong> to teammate " +
+          s.friend +
+          " and walks away with <strong>" +
+          s.left +
+          "</strong>.";
+      }
+
+      stepInfo.textContent =
+        "Step " +
+        currentStep +
+        " · Candies with Mofiz after this step: " +
+        s.left +
+        " · Given to this teammate: " +
+        s.given;
+
+      prevBtn.disabled = currentStep === 0;
+      nextBtn.disabled = currentStep === steps.length - 1;
+    }
+
+    prevBtn.addEventListener("click", () => {
+      if (currentStep > 0) {
+        currentStep--;
+        renderStep();
+      }
     });
 
-    current = remaining;
-  }
-  return { start, give, steps };
-}
+    nextBtn.addEventListener("click", () => {
+      if (currentStep < steps.length - 1) {
+        currentStep++;
+        const s = steps[currentStep];
+        addLog(
+          "Step " +
+            currentStep +
+            ": <span>" +
+            s.text +
+            "</span>"
+        );
+        renderStep();
+      }
+    });
 
-/* ---------- TABLE SIMULATOR (same as before, just using computeSteps) ---------- */
-
-function simulate() {
-  const n = parseInt(document.getElementById("friends").value);
-  if (isNaN(n) || n <= 0) return;
-
-  const { start, give, steps } = computeSteps(n);
-
-  let html = `
-    <p><strong>N = ${n}</strong></p>
-    <p>Minimum starting candies = <strong>${start}</strong></p>
-    <p>Candies given to each friend = <strong>${give}</strong></p>
-    
-    <h3>Step-by-Step Calculation</h3>
-    <table>
-      <tr>
-        <th>Friend #</th>
-        <th>Before Double</th>
-        <th>After Double</th>
-        <th>Given</th>
-        <th>Remaining</th>
-      </tr>
-  `;
-
-  for (const step of steps) {
-    html += `
-      <tr>
-        <td>${step.friend}</td>
-        <td>${step.beforeDouble}</td>
-        <td>${step.afterDouble}</td>
-        <td>${step.given}</td>
-        <td>${step.remaining}</td>
-      </tr>
-    `;
-  }
-  html += "</table>";
-  document.getElementById("result").innerHTML = html;
-}
-
-/* ---------- ANIMATION ("video" style) ---------- */
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function playAnimation() {
-  const btn = document.getElementById("playBtn");
-  const n = parseInt(document.getElementById("friends").value);
-  if (isNaN(n) || n <= 0) return;
-
-  const { start, give, steps } = computeSteps(n);
-
-  const mofiz = document.getElementById("mofiz");
-  const candiesText = document.getElementById("candiesText");
-  const detailText = document.getElementById("detailText");
-
-  // Only first 3 friend markers visible (good for N=3 story)
-  const markers = [document.getElementById("friend1"),
-                   document.getElementById("friend2"),
-                   document.getElementById("friend3")];
-
-  markers.forEach((m, i) => {
-    if (i < steps.length) {
-      m.style.display = "block";
-      m.querySelector(".friend-label").textContent = "Friend " + (i + 1);
-    } else {
-      m.style.display = "none";
-    }
-  });
-
-  btn.disabled = true;
-
-  // Reset position & numbers
-  mofiz.style.transition = "none";
-  mofiz.style.left = "5%";
-  candiesText.textContent = start;
-  detailText.textContent = `Start: Mofiz leaves home with ${start} candies.`;
-
-  // Allow CSS to apply
-  await sleep(100);
-  mofiz.style.transition = "left 1s linear";
-
-  // Walk and show each step
-  for (let i = 0; i < steps.length; i++) {
-    const step = steps[i];
-    const marker = markers[i];
-
-    await sleep(800);
-
-    // Step 1: show candies before doubling
-    candiesText.textContent = step.beforeDouble;
-    detailText.textContent = `Before meeting friend ${step.friend}, he has ${step.beforeDouble} candies.`;
-
-    await sleep(1200);
-
-    // Step 2: candies double
-    candiesText.textContent = step.afterDouble;
-    detailText.textContent = `Candies double: ${step.beforeDouble} × 2 = ${step.afterDouble}.`;
-
-    await sleep(1200);
-
-    // Step 3: give candies
-    candiesText.textContent = step.remaining;
-    detailText.textContent =
-      `He gives ${give} candies to friend ${step.friend}. Remaining candies: ${step.remaining}.`;
-
-    // Move Mofiz to this friend’s position
-    if (marker) {
-      const rect = marker.getBoundingClientRect();
-      const trackRect = document.getElementById("animationTrack").getBoundingClientRect();
-      const percent =
-        ((rect.left + rect.width / 2 - trackRect.left) / trackRect.width) * 100;
-      mofiz.style.left = percent + "%";
-    }
-
-    await sleep(1500);
-  }
-
-  // After last friend
-  candiesText.textContent = 0;
-  detailText.textContent = `After meeting the last friend, Mofiz has 0 candies left.`;
-
-  btn.disabled = false;
-}
-</script>
-
+    // Initial render
+    renderStep();
+  </script>
 </body>
 </html>
