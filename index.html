@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Mofiz Candy Visualizer</title>
+  <title>Mofiz Candy Visualizer – Moving Cartoon</title>
   <style>
     body {
       background: #0f172a;
@@ -22,6 +22,7 @@
       border-radius: 10px;
       max-width: 700px;
       margin: auto;
+      margin-bottom: 20px;
     }
 
     input {
@@ -44,6 +45,11 @@
       margin-left: 10px;
     }
 
+    button:disabled {
+      background: #1f2937;
+      cursor: not-allowed;
+    }
+
     table {
       width: 100%;
       margin-top: 20px;
@@ -54,10 +60,15 @@
     th, td {
       border: 1px solid #334155;
       padding: 10px;
+      font-size: 14px;
     }
 
     th {
       background: #1e40af;
+    }
+
+    tr.active-row {
+      background: #022c22;
     }
 
     .visual-card {
@@ -65,41 +76,168 @@
       padding: 15px;
       background: #1e293b;
       border-radius: 10px;
-      max-width: 600px;
+      max-width: 700px;
       margin-left: auto;
       margin-right: auto;
-      font-size: 18px;
+      font-size: 16px;
       line-height: 1.5;
     }
 
     .big-emoji {
       font-size: 45px;
     }
+
+    .track-wrapper {
+      max-width: 700px;
+      margin: 20px auto 10px;
+      text-align: left;
+    }
+
+    .track-label {
+      font-size: 14px;
+      color: #cbd5f5;
+      margin-bottom: 6px;
+    }
+
+    .track {
+      position: relative;
+      height: 120px;
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      overflow: hidden;
+    }
+
+    .track-line {
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      top: 65px;
+      height: 4px;
+      background: #1f2937;
+      border-radius: 999px;
+    }
+
+    .friend-dot {
+      position: absolute;
+      top: 59px;
+      width: 10px;
+      height: 10px;
+      margin-left: -5px;
+      border-radius: 999px;
+      background: #38bdf8;
+    }
+
+    .friend-label {
+      position: absolute;
+      top: 72px;
+      font-size: 11px;
+      white-space: nowrap;
+      transform: translateX(-50%);
+      color: #9ca3af;
+    }
+
+    #mofizChar {
+      position: absolute;
+      bottom: 15px;
+      left: 5%;
+      width: 60px;
+      text-align: center;
+      transition: left 0.8s ease;
+    }
+
+    .mofiz-body {
+      font-size: 40px;
+      animation: bounce 0.8s infinite alternate;
+    }
+
+    .mofiz-name {
+      font-size: 12px;
+      margin-top: -4px;
+      color: #c4b5fd;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-6px); }
+    }
+
+    .info-text {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-top: 6px;
+    }
   </style>
 </head>
 <body>
 
   <h1>🍬 Mofiz Candy Visualizer</h1>
-  <p>Enter number of teammates (N), and see step-by-step how candies double!</p>
+  <p>Enter number of teammates (N), and watch Mofiz walk and give candies!</p>
 
   <div class="box">
-    <input type="number" id="inputN" min="1" max="60" placeholder="Enter N">
-    <button onclick="calculate()">Show Visualization</button>
+    <div>
+      <input type="number" id="inputN" min="1" max="60" placeholder="Enter N (1–60)">
+      <button onclick="calculate()">Show Visualization</button>
+    </div>
+    <p class="info-text">
+      Formula used: start candies = 2ⁿ − 1, candies given to each teammate = 2ⁿ.
+    </p>
+  </div>
+
+  <!-- Moving cartoon Mofiz + track -->
+  <div class="track-wrapper" id="trackWrapper" style="display:none;">
+    <div class="track-label" id="trackLabel">
+      Walking path: teammates will appear on this line.
+    </div>
+    <div class="track" id="track">
+      <div class="track-line"></div>
+
+      <!-- Mofiz character -->
+      <div id="mofizChar">
+        <div class="mofiz-body">🧍‍♂️</div>
+        <div class="mofiz-name">Mofiz</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="box" id="animationControls" style="display:none; margin-top:10px;">
+    <button id="playButton" onclick="playAnimation()">▶ Play animation</button>
+    <button id="stepButton" onclick="stepOnce()">Step once ➡</button>
+    <span id="statusText" class="info-text"></span>
   </div>
 
   <div id="result"></div>
 
   <script>
+    let stepsData = [];
+    let currentStepIndex = 0;
+    let timer = null;
+
+    function clearAnimation() {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+      currentStepIndex = 0;
+    }
+
     function calculate() {
-      let N = parseInt(document.getElementById('inputN').value);
+      clearAnimation();
+
+      const N = parseInt(document.getElementById('inputN').value);
       if (!N || N < 1 || N > 60) {
         alert("Please enter a valid N between 1 and 60.");
         return;
       }
 
+      const startCandies = Math.pow(2, N) - 1;
+      const giveAmount = Math.pow(2, N);
+      let candies = startCandies;
+
+      stepsData = [];
       let tableHTML = `
         <h2>📋 Step-by-Step Table</h2>
-        <table>
+        <table id="stepsTable">
           <tr>
             <th>Teammate #</th>
             <th>Candies Before Doubling</th>
@@ -109,27 +247,21 @@
           </tr>
       `;
 
-      // Formula: minimum candies = 2^N - 1
-      let startCandies = Math.pow(2, N) - 1;
-      let giveAmount = Math.pow(2, N);
-
-      let candies = startCandies;
-
-      let visualText = `
-        <div class="visual-card">
-          <div class="big-emoji">🧍‍♂️🍬</div>
-          <strong>Mofiz starts with ${startCandies} candies.</strong><br>
-          He will give <strong>${giveAmount} candies</strong> to each teammate.
-          <br><br>
-      `;
-
       for (let i = 1; i <= N; i++) {
-        let beforeDouble = candies;
-        let afterDouble = candies * 2;
-        let left = afterDouble - giveAmount;
+        const beforeDouble = candies;
+        const afterDouble = candies * 2;
+        const left = afterDouble - giveAmount;
+
+        stepsData.push({
+          teammate: i,
+          beforeDouble,
+          afterDouble,
+          given: giveAmount,
+          left
+        });
 
         tableHTML += `
-          <tr>
+          <tr id="row-${i}">
             <td>${i}</td>
             <td>${beforeDouble}</td>
             <td>${afterDouble}</td>
@@ -138,26 +270,201 @@
           </tr>
         `;
 
-        visualText += `
-          <div style="margin-top:12px;">
-            <strong>➡️ Meeting teammate ${i}</strong><br>
-            Candies double: <strong>${beforeDouble} → ${afterDouble}</strong> ✨<br>
-            Gives <strong>${giveAmount}</strong> candies 🍬<br>
-            Walks away with <strong>${left}</strong> candies.
-          </div>
-        `;
-
         candies = left;
       }
 
-      visualText += `
-        <br><strong>🎉 Mofiz ends with 0 candies. Perfect!</strong>
+      tableHTML += `</table>`;
+
+      const summaryHTML = `
+        <div class="visual-card" id="visualCard">
+          <div class="big-emoji">🧍‍♂️🍬</div>
+          <strong>Mofiz starts with ${startCandies} candies.</strong><br>
+          He will give <strong>${giveAmount} candies</strong> to each of his ${N} teammates.<br><br>
+          Click <strong>"Play animation"</strong> or <strong>"Step once"</strong> to see him walk.
         </div>
       `;
 
-      tableHTML += `</table>`;
+      document.getElementById("result").innerHTML = tableHTML + summaryHTML;
 
-      document.getElementById("result").innerHTML = tableHTML + visualText;
+      // Show track & controls
+      document.getElementById("trackWrapper").style.display = "block";
+      document.getElementById("animationControls").style.display = "block";
+
+      // Draw teammate dots on the track
+      drawFriendDots(N);
+
+      // Reset Mofiz position and status
+      currentStepIndex = 0;
+      moveMofizToStep(0, N);
+      highlightRow(0);
+      document.getElementById("statusText").innerText =
+        `Ready. Mofiz has ${startCandies} candies before starting.`;
+    }
+
+    function drawFriendDots(N) {
+      const track = document.getElementById("track");
+
+      // Remove old dots/labels
+      const oldDots = track.querySelectorAll(".friend-dot, .friend-label");
+      oldDots.forEach(el => el.remove());
+
+      if (N === 1) {
+        const pos = 50;
+        createFriendMarker(track, pos, 1);
+        document.getElementById("trackLabel").innerText =
+          "Walking path: only 1 teammate in the middle.";
+        return;
+      }
+
+      // For big N, we only mark some positions: 1, maybe some middle, and N
+      const maxMarkers = 8;
+      let indices = [];
+      if (N <= maxMarkers) {
+        for (let i = 1; i <= N; i++) indices.push(i);
+      } else {
+        indices = [1];
+        const middleCount = maxMarkers - 2;
+        for (let k = 1; k <= middleCount; k++) {
+          const idx = Math.round(1 + (k * (N - 1)) / (middleCount + 1));
+          if (!indices.includes(idx)) indices.push(idx);
+        }
+        indices.push(N);
+        indices.sort((a, b) => a - b);
+      }
+
+      indices.forEach(i => {
+        const pos = 5 + ((i - 1) / (N - 1)) * 90;
+        createFriendMarker(track, pos, i);
+      });
+
+      document.getElementById("trackLabel").innerText =
+        "Walking path: dots show some teammate positions on the line.";
+    }
+
+    function createFriendMarker(track, percentLeft, index) {
+      const dot = document.createElement("div");
+      dot.className = "friend-dot";
+      dot.style.left = percentLeft + "%";
+
+      const label = document.createElement("div");
+      label.className = "friend-label";
+      label.style.left = percentLeft + "%";
+      label.innerText = "T" + index;
+
+      track.appendChild(dot);
+      track.appendChild(label);
+    }
+
+    function moveMofizToStep(stepIndex, N) {
+      const mofiz = document.getElementById("mofizChar");
+      if (!mofiz) return;
+
+      if (stepIndex === 0) {
+        // Before any teammate: start at left
+        mofiz.style.left = "5%";
+        return;
+      }
+
+      const i = stepIndex; // teammate number
+      let percentLeft;
+      if (N === 1) {
+        percentLeft = 50;
+      } else {
+        // Move between 5% and 95%
+        percentLeft = 5 + ((i - 1) / (N - 1)) * 90;
+      }
+      mofiz.style.left = percentLeft + "%";
+    }
+
+    function highlightRow(stepIndex) {
+      // Remove old highlights
+      const rows = document.querySelectorAll("tr.active-row");
+      rows.forEach(r => r.classList.remove("active-row"));
+
+      if (stepIndex === 0) return; // no teammate yet
+
+      const row = document.getElementById("row-" + stepIndex);
+      if (row) row.classList.add("active-row");
+    }
+
+    function updateVisualCard(stepIndex) {
+      const card = document.getElementById("visualCard");
+      const N = stepsData.length;
+      if (!card) return;
+
+      if (stepIndex === 0) {
+        // Initial state text is kept from calculate()
+        return;
+      }
+
+      const step = stepsData[stepIndex - 1];
+
+      let text = `
+        <div class="big-emoji">🧍‍♂️➡🧑‍🤝‍🧑</div>
+        <strong>Meeting teammate ${step.teammate} of ${N}</strong><br><br>
+        Candies double: <strong>${step.beforeDouble} → ${step.afterDouble}</strong> ✨<br>
+        He gives <strong>${step.given}</strong> candies 🍬<br>
+        He walks away with <strong>${step.left}</strong> candies.
+      `;
+
+      if (stepIndex === N) {
+        text += `<br><br><strong>🎉 After the last teammate, Mofiz has 0 candies left. Perfect!</strong>`;
+      }
+
+      card.innerHTML = text;
+    }
+
+    function playAnimation() {
+      if (!stepsData.length) return;
+      clearAnimation();
+      const N = stepsData.length;
+
+      document.getElementById("statusText").innerText = "Playing animation...";
+      currentStepIndex = 0;
+      moveMofizToStep(0, N);
+      highlightRow(0);
+      updateVisualCard(0);
+
+      timer = setInterval(() => {
+        if (currentStepIndex >= N) {
+          clearAnimation();
+          document.getElementById("statusText").innerText =
+            "Finished! Mofiz has visited all teammates.";
+          return;
+        }
+
+        currentStepIndex++;
+        moveMofizToStep(currentStepIndex, N);
+        highlightRow(currentStepIndex);
+        updateVisualCard(currentStepIndex);
+
+        const step = stepsData[currentStepIndex - 1];
+        document.getElementById("statusText").innerText =
+          `Now visiting teammate ${step.teammate}/${N}. ` +
+          `Candies: ${step.beforeDouble} → ${step.afterDouble}, gives ${step.given}, left ${step.left}.`;
+      }, 1200);
+    }
+
+    function stepOnce() {
+      if (!stepsData.length) return;
+
+      const N = stepsData.length;
+
+      if (currentStepIndex >= N) {
+        document.getElementById("statusText").innerText =
+          "Already finished all teammates. Press 'Play animation' after recalculating to restart.";
+        return;
+      }
+
+      currentStepIndex++;
+      moveMofizToStep(currentStepIndex, N);
+      highlightRow(currentStepIndex);
+      updateVisualCard(currentStepIndex);
+
+      const step = stepsData[currentStepIndex - 1];
+      document.getElementById("statusText").innerText =
+        `Stepped to teammate ${step.teammate}/${N}. ` +
+        `Candies: ${step.beforeDouble} → ${step.afterDouble}, gives ${step.given}, left ${step.left}.`;
     }
   </script>
 
